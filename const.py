@@ -39,11 +39,13 @@ KILOBYTE        = 1024
 MEGABYTE        = 1048576
 GIGABYTE        = 1073741824
 TERABYTE        = 1099511627776
+
 #RDS_FOLDER      = '/Data/maint/Reporting/prd/reports/'
 #ZID_LOG_FOLDER  = '/livearc/volatile/logs/'
 #EXPORT_DIR      = '/home/nfs/z3007136_sa/rdscsv/'
+ZID_LOG_FILES     = ['http.1.log', 'http.2.log']
 
-ZID_LOG_FOLDER  = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Data/LiveArcLogs'
+ZID_LOG_FOLDER  = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Data/LiveArcLogs/'
 LIB_DATA_FOLDER = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Data/rdmp/'
 RDMP_FOLDER      = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Output/rdmp_files/'
 EXPORT_DIR       = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Output/rdscsv/'

@@ -38,6 +38,7 @@ from xml.etree import ElementTree as ET
 from const import *
 from rds_data import *
 from rdmp_lib_data import *
+from user_access import *
 
 # export did include transfer, as we need to know the name of the 
 # export file to transfer it. instead we just transfer the latest
