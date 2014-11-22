@@ -49,7 +49,6 @@ def runReport(file, myCursor):
     # end if 
     
     emlFile = open(filename, 'r')
-    print "processing %s" %filename
     # the fields to insert
     sqlFields = "run_date, plan, cache, space, number_of_files, import_file_name"
     
@@ -66,28 +65,32 @@ def runReport(file, myCursor):
             RDMP = line.strip('DMP # \r\n')
             cache = next(emlFile).strip('Cache used: ')
             cache = cache.strip("\r\n")
-            space = next(emlFile).strip('Space used: ')
+            spaceLine =  next(emlFile)
+            space = spaceLine.strip('Space used: ')
             files = next(emlFile).strip('Number of Files: \r\n')
-            spaceLength = len(space)
-            space.replace(" ", "")
-            spaceNumber = float(space[:-3])
-            spaceUnit = space[-2:-1]
-            spaceUnit.strip(' ')
+            space = space.replace(" ", "")
+            space = space.strip()
+            spaceNumber = float(space[:-1])
+            spaceUnit = space[-1]
+            spaceUnit = spaceUnit.strip()
             
             spaceUnit.splitlines()
-            if spaceUnit == 'K':
-                    spaceNumber = spaceNumber * KILOBYTE
-            elif spaceUnit == 'M':
-                    spaceNumber = float(spaceNumber) * MEGABYTE
-            elif spaceUnit == 'T':
-                    spaceNumber = float(spaceNumber) * TERABYTE
-            elif spaceUnit == 'G':
-                    spaceNumber = spaceNumber * GIGABYTE
-            else:
+            try:
+                if spaceUnit == 'K':
+                        spaceNumber = spaceNumber * KILOBYTE
+                elif spaceUnit == 'M':
+                        spaceNumber = float(spaceNumber) * MEGABYTE
+                elif spaceUnit == 'T':
+                        spaceNumber = float(spaceNumber) * TERABYTE
+                elif spaceUnit == 'G':
+                        spaceNumber = spaceNumber * GIGABYTE
+                else:
+                    spaceNumber = 0
+            except:
                 spaceNumber = 0
             
             run_date         = dateFromString(theDate,"%a %b %d %H:%M:%S %Y", True)
-            sqlValues = (run_date, RDMP, cache, str(int(spaceNumber)), int(files), file)
+            sqlValues = (run_date, RDMP, cache, float(spaceNumber), int(files), file)
             
             sqlCom = 'insert into %s (%s) values (?,?,?,?,?,?)' % (RDS_TABLE, sqlFields)
             myCursor.execute(sqlCom, sqlValues)
@@ -101,7 +104,6 @@ def runReport(file, myCursor):
     myRec = myCursor.fetchone()
     noTimesRecorded = int(myRec[0])
     
-    print "%d logs were recorded for %s" %(noTimesRecorded, filename)
         
     emlFile.close();
     return
