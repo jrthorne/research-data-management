@@ -34,11 +34,11 @@ VALUES                  = {}
 #1 Megabyte = 1,048,576 Bytes
 #1 Gigabyte = 1,073,741,824 Bytes
 #1 Terabyte = 1,099,511,627,776 Bytes
-
-KILOBYTE        = 1024
-MEGABYTE        = 1048576
-GIGABYTE        = 1073741824
-TERABYTE        = 1099511627776
+# update. Store as gigabytes
+KILOBYTE        = 9.5367e-7
+MEGABYTE        = 9.7656e-4
+GIGABYTE        = 1.0000
+TERABYTE        = 1024.0
 
 #RDS_FOLDER      = '/Data/maint/Reporting/prd/reports/'
 #ZID_LOG_FOLDER  = '/livearc/volatile/logs/'

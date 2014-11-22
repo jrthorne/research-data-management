@@ -34,11 +34,12 @@ def walktree(top, writeto):
         else:
             # Unknown file type, print a message
             print 'Skipping %s' % pathname
-
+##########################################
 def visitfile(file):
     print 'visiting', file
     #shutil.copy2(file,"rdmp/info1")
 
+##########################################
 ''' Rename the files that I copied to rdmp_files to have sensible names'''
 def renameRDMP(folder):
     start = '<dc:subject>pid: '
@@ -56,7 +57,8 @@ def renameRDMP(folder):
                     os.rename(folder+f, folder+a)
         else:
             os.remove(folder+f)
-            
+
+##########################################            
 def findelements(elem, level=0):
     #print "Finding Elements at level %d" %(level) 
     #print elem.tag
@@ -86,6 +88,7 @@ def findelements(elem, level=0):
     return
 # end findelements  
 
+##########################################
 def extractFromRDMP(folder, myCursor):
         
         for f in os.listdir(folder):
@@ -109,25 +112,30 @@ def extractFromRDMP(folder, myCursor):
                 spaceUnit   = ''
                 
             # is RDMP a number?
-            if len(RDMPvolume) < 15:
-            	try:
-            		RDMPvolume = float(RDMPvolume)
-            	except ValueError:
-            		RDMPvolume = 0
-            	# end try
-            else:
+           
+            try:
+                RDMPvolume = float(RDMPvolume)
+            except ValueError:
+                RDMPvolume = 0
+            except:
             	RDMPvolume = 0
-            	
-            if spaceUnit == 'K':
-                    volumeSpace = int(RDMPvolume * KILOBYTE)
-            elif spaceUnit == 'M':
-                    volumeSpace = int(RDMPvolume * MEGABYTE)
-            elif spaceUnit == 'T':
-                    volumeSpace = int(RDMPvolume * TERABYTE)
-            elif spaceUnit == 'G':
-                    volumeSpace = int(RDMPvolume * GIGABYTE)
-            else:
-                volumeSpace = 0
+            # end try
+            
+            try:
+                if spaceUnit == 'K':
+                        volumeSpace = int(RDMPvolume * KILOBYTE)
+                elif spaceUnit == 'M':
+                        volumeSpace = int(RDMPvolume * MEGABYTE)
+                elif spaceUnit == 'T':
+                        volumeSpace = int(RDMPvolume * TERABYTE)
+                elif spaceUnit == 'G':
+                        volumeSpace = int(RDMPvolume * GIGABYTE)
+                else:
+                    volumeSpace = 0
+            except:
+            	volumeSpace = 0
+            # end try
+            
             storageRequired = VALUES[KEYS[data_storage_required]]
             if storageRequired == 'yes':
                 boolStorageRequired = True
@@ -178,8 +186,9 @@ def extractFromRDMP(folder, myCursor):
 
 # end  extractFromRDMP      
 
+##########################################
 def convertID(rdmpID):
-    numberID = rdmpID.strip('rdmp:')
+    numberID = rdmpID.strip('id: rdmp:')
     digits = len(numberID)
     padding = ''
     #print digits
@@ -194,11 +203,12 @@ def convertID(rdmpID):
     retval = 'D'+padding+numberID
     return retval
                     
-                
+##########################################                
 def removeTags(start,end,line):
     a =  (line.split(start))[1].split(end)[0]
     return a
-
+    
+##########################################
 def removeTags2(start,end,line):
     if start    in line:
         a =  (line.split(start))[1].split(end)[0]
