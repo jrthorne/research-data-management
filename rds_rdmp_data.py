@@ -94,7 +94,11 @@ if __name__ == "__main__":
     # end info
     
     if THECOMMANDS[CMDIMPORT_USR] in theCom:
-        pass
+        myCon      = sqlite3.connect(DBFILE)
+        myCursor   = myCon.cursor()
+        populate_user_access_table(myCursor)
+        myCon.commit()
+        myCon.close()
     # end if
     
     

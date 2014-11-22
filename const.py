@@ -54,7 +54,8 @@ EXPORT_PREFIX    = 'rdslog_'
 # J1.3, but not the prefix above
 RDS_TABLE        = 'serverstatus_rds_log'
 RDMP_TABLE       = 'serverstatus_rdmp_info'
-DBFILE          = "db.sqlite3"
+USER_ACC_TABLE   = 'serverstatus_user_access'
+DBFILE          = "/Volumes/daddy2/Users/jason/public_html/LTRDS/db.sqlite3"
 FROMADDR        = 'root@infplfs010.sc.it.unsw.edu.au'
 TOADDR          = 'j.thorne@unsw.edu.au'
 

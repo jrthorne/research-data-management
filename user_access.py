@@ -6,13 +6,6 @@ import array
 from time import strftime
 from time import gmtime
 import os
-import numpy
-
-
-zID_list=[]
-zid_time=[]
-zid_firsttime = []
-time3 = []
 
 def unique (items):
     found = set([])
@@ -24,7 +17,12 @@ def unique (items):
             keep.append(item)
     return keep
 
-def populate_user_access_table(myCursor)
+def populate_user_access_table(myCursor):
+    zID_list=[]
+    zid_time=[]
+    zid_firsttime = []
+    time3 = []
+    
     # The log file to use is the one most recently modified.
     modTime = 0
     logFileName = ZID_LOG_FOLDER + ZID_LOG_FILES[0]
@@ -72,11 +70,20 @@ def populate_user_access_table(myCursor)
                             zid_firsttime[i] = time4
                 except:
                     print "Oops! not a valid date", time3
-
-for j in range(len(zID_list)):
-	writeUserList.writerow((zID_list[j],strftime("%d-%m-%Y %H:%M:%S", zid_time[j]),strftime("%d-%m-%Y %H:%M:%S", zid_firsttime[j])))      		
-        			
-
-print 'complete'
+    
+    sqlFields = "zid, first_access, last_access"
+     
+    for j in range(len(zID_list)):
+        sqlCom = 'insert into %s (%s) values (?,?,?)' % (USER_ACC_TABLE, sqlFields)
+        # format for sqlite3 is yyyy-MM-dd HH:mm:ss
+        first_access = strftime("%Y-%m-%d %H:%M:%S", zid_time[j])
+        last_access = strftime("%Y-%m-%d %H:%M:%S", zid_firsttime[j])
+        sqlValues = (zID_list[j], first_access, last_access)
+        myCursor.execute(sqlCom, sqlValues)    		
+    # next j  
+    
+    print sqlCom, sqlValues
+    
+    print 'complete'
 
 
