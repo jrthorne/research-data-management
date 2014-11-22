@@ -36,9 +36,7 @@ import shutil
 from xml.etree import ElementTree as ET
 
 from const import *
-from rds_data import *
-from rdmp_lib_data import *
-from user_access import *
+import rds_data, rdmp_lib_data, user_access
 
 # export did include transfer, as we need to know the name of the 
 # export file to transfer it. instead we just transfer the latest
@@ -46,7 +44,7 @@ from user_access import *
 THECOMMANDS     = ['importinfo1', 'importlibinfo', 'importuser', 'export', 'transfer']
 CMDIMPORT1      = 0
 CMDIMPORT_LIB   = 1
-CMDIMPORT_USR    = 2
+CMDIMPORT_USR   = 2
 CMDEXPORT       = 3
 CMDTRANSFER     = 4
 
@@ -68,7 +66,7 @@ if __name__ == "__main__":
     
         print 'Start Reading Files'
         for file in os.listdir(RDS_FOLDER):
-            runReport(file, myCursor)
+            rds_data.runReport(file, myCursor)
             myCon.commit()
         print 'Reading Files Complete'
         
@@ -79,15 +77,15 @@ if __name__ == "__main__":
     
         print 'Start Reading RDMP Files' 
         # copy files to a temporary place where we can rename thme
-        walktree(LIB_DATA_FOLDER,RDMP_FOLDER)
+        rdmp_lib_data.walktree(LIB_DATA_FOLDER,RDMP_FOLDER)
         # rename the files to the rdmp_X
-        renameRDMP(RDMP_FOLDER)
+        rdmp_lib_data.renameRDMP(RDMP_FOLDER)
         
         myCon      = sqlite3.connect(DBFILE)
         myCursor   = myCon.cursor()
     
         # Read all these xml files, and get the data from them
-        extractFromRDMP(RDMP_FOLDER, myCursor)
+        rdmp_lib_data.extractFromRDMP(RDMP_FOLDER, myCursor)
         myCon.commit()
         myCon.close()
         print 'Import data from RDMP Files Complete'
@@ -96,7 +94,7 @@ if __name__ == "__main__":
     if THECOMMANDS[CMDIMPORT_USR] in theCom:
         myCon      = sqlite3.connect(DBFILE)
         myCursor   = myCon.cursor()
-        populate_user_access_table(myCursor)
+        user_access.populate_user_access_table(myCursor)
         myCon.commit()
         myCon.close()
     # end if
@@ -120,9 +118,6 @@ if __name__ == "__main__":
 
     if THECOMMANDS[CMDTRANSFER] in theCom:
         # and transfer the file by email
-        me              = FROMADDR
-        you             = TOADDR
-
         # The file to transfer is the newst file preceded with rdslog_
         logFiles        = os.listdir(EXPORT_DIR)
         # find the newest log file
@@ -154,11 +149,11 @@ if __name__ == "__main__":
             niceTime        += ' ' + lt[6:8] + ':' + lt[8:10] + ':' + lt[-2:]
             msg['Subject']  = 'RDS Report csv file made %s' %niceTime
         # end if
-        msg['From']     = me
-        msg['To']       = you
+        msg['From']     = FROMADDR
+        msg['To']       = TOADDR
 
         s               = smtplib.SMTP('localhost')
-        s.sendmail(me, [you], msg.as_string())
+        s.sendmail(me, [TOADDR], msg.as_string())
         s.quit()
     # endif
     
