@@ -174,7 +174,7 @@ def extractFromRDMP(folder, myCursor):
             sqlValues = (rdmpID, 
                         VALUES[KEYS[dc_status[0]]+EXTRATAGS[dc_status[1]]],
                         dcStorageStatus[len('storageStatus:storageStatus: '):],
-                        str(volumeSpace),
+                        float(volumeSpace),
                         VALUES[KEYS[storage_namespace]],
                         VALUES[KEYS[ms21_storage_status]],
                         VALUES[KEYS[ms21_status]],
