@@ -13,19 +13,6 @@ from xml.etree import ElementTree as ET
 from const import *
 
 ##########################################
-def dateFromString(dateString, format, useTime):
-    strippedTime    = time.strptime(dateString, format)
-    myTime            = time.mktime(strippedTime)
-    if useTime:
-        retVal        = datetime.datetime.fromtimestamp(myTime)
-    else:
-        retVal        = datetime.date.fromtimestamp(myTime)
-    # end if
-    
-    return retVal
-# end dateFromString
-
-##########################################
 def runReport(file, myCursor):
     # only log files with .elm extension
     if file[-4:] != '.eml':
@@ -107,3 +94,79 @@ def runReport(file, myCursor):
         
     emlFile.close();
     return
+
+##########################################
+def recordStats(myCursor):
+    # record statistics for each day from the last time this was done
+    myToday     = datetime.date.today()
+    oneDay      = datetime.timedelta(days=1)
+    
+    # when was this last run?
+    sqlCom      = "select max(run_date) from %s;" %RDS_STATS_TABLE
+    myCursor.execute(sqlCom)
+    myRec       = myCursor.fetchone()
+    lastDate    = myRec[0] or 0
+    
+    # if there is no data recorded, then go from the first day RDS logs were recorded
+    if lastDate == 0:
+        sqlCom      = "select min(run_date) from %s;" %RDS_TABLE
+        myCursor.execute(sqlCom)
+        myRec       = myCursor.fetchone()
+        lastDate    = myRec[0] or 0
+        # if the date is still zero, there are no stats to record
+        if lastDate == 0:
+            print "Nothing is in %s, so no stats to record" %RDS_TABLE
+            return
+        else:
+            # we only want the date here
+            lastDate = dateFromString(lastDate, "%Y-%m-%d %H:%M:%S", False) - oneDay
+        # end if
+    else:
+        # we only want the date here
+        lastDate = dateFromString(lastDate, "%Y-%m-%d %H:%M:%S", False)
+    # end if
+    
+   
+    
+    sqlFields   = "run_date, total_space, number_of_files, number_of_plans, "
+    sqlFields   += "space_lag, files_lag, plans_lag"
+    thisDay     = lastDate
+    lastStorage = 0
+    lastPlans = 0
+    lastFiles = 0
+    while thisDay <= myToday:
+        thisDay += oneDay
+        sqlCondition = "where run_date < '%s' " %(thisDay+oneDay).strftime('%Y-%m-%d')
+        sqlCondition += "and run_date > '%s';" %thisDay.strftime('%Y-%m-%d')
+        sqlCom      = "select sum(space)/%f from %s " %(TERABYTE, RDS_TABLE)  + sqlCondition
+        
+        myCursor.execute(sqlCom)
+        myRec       = myCursor.fetchone()
+        totStorageToday = float(myRec[0] or 0)
+        
+        sqlCom      = "select count(distinct(plan)) from %s " %RDS_TABLE + sqlCondition
+                
+        myCursor.execute(sqlCom)
+        myRec       = myCursor.fetchone()
+        noPlans     = int(myRec[0] or 0)
+        
+        sqlCom      = "select sum(number_of_files) from %s " %RDS_TABLE + sqlCondition
+    
+        myCursor.execute(sqlCom)
+        myRec       = myCursor.fetchone()
+        noFiles     = int(myRec[0] or 0)
+        
+        # now insert the statistics for this day if there was anything recorded
+        if noFiles or noPlans or totStorageToday:
+            lagStorage  = (totStorageToday - lastStorage)*TERABYTE # back in Gigabytes
+            lagFiles    = noFiles - lastFiles
+            lagPlans    = noPlans - lastPlans
+            sqlCom      = 'insert into %s (%s) values (?,?,?,?,?,?,?)' %(RDS_STATS_TABLE, sqlFields)
+            sqlValues   = (thisDay, totStorageToday, noFiles, noPlans, lagStorage, lagFiles, lagPlans)
+            myCursor.execute(sqlCom, sqlValues)
+            lastStorage = totStorageToday
+            lastFiles = noFiles
+            lastPlans = noPlans
+        # end if
+    # end while
+# end recordStats

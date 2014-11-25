@@ -1,3 +1,5 @@
+ONEMONTH                = 30
+
 # to allow searching of xml keys, the prefexis need to have reference in the namespaces
 NAMESPACES              = {}
 NAMESPACES['foxml']     = 'info:fedora/fedora-system:def/foxml#'
@@ -40,22 +42,36 @@ MEGABYTE        = 9.7656e-4
 GIGABYTE        = 1.0000
 TERABYTE        = 1024.0
 
-RDS_FOLDER      = '/Data/maint/Reporting/prd/reports/'
-ZID_LOG_FOLDER  = '/livearc/volatile/logs/'
-EXPORT_DIR      = '/home/nfs/z3007136_sa/rdscsv/'
+#RDS_FOLDER      = '/Data/maint/Reporting/prd/reports/'
+#ZID_LOG_FOLDER  = '/livearc/volatile/logs/'
+#EXPORT_DIR      = '/home/nfs/z3007136_sa/rdscsv/'
 ZID_LOG_FILES     = ['http.1.log', 'http.2.log']
 
-#ZID_LOG_FOLDER  = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Data/LiveArcLogs/'
+ZID_LOG_FOLDER  = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Data/LiveArcLogs/'
 LIB_DATA_FOLDER = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Data/rdmp/'
 RDMP_FOLDER      = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Output/rdmp_files/'
-#EXPORT_DIR       = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Output/rdscsv/'
-#RDS_FOLDER       = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Data/email/'
+EXPORT_DIR       = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Output/rdscsv/'
+RDS_FOLDER       = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Data/email/'
 EXPORT_PREFIX    = 'rdslog_'
 # J1.3, but not the prefix above
 RDS_TABLE        = 'serverstatus_rds_log'
+RDS_STATS_TABLE  = 'serverstatus_rds_stat'
 RDMP_TABLE       = 'serverstatus_rdmp_info'
 USER_ACC_TABLE   = 'serverstatus_user_access'
 DBFILE          = "/Volumes/daddy2/Users/jason/public_html/LTRDS/db.sqlite3"
 FROMADDR        = 'root@infplfs010.sc.it.unsw.edu.au'
 TOADDR          = 'j.thorne@unsw.edu.au'
 
+import time, datetime
+##########################################
+def dateFromString(dateString, format, useTime=False):
+    strippedTime    = time.strptime(dateString, format)
+    myTime            = time.mktime(strippedTime)
+    if useTime:
+        retVal        = datetime.datetime.fromtimestamp(myTime)
+    else:
+        retVal        = datetime.date.fromtimestamp(myTime)
+    # end if
+    
+    return retVal
+# end dateFromString

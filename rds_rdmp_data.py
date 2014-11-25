@@ -41,12 +41,14 @@ import rds_data, rdmp_lib_data, user_access
 # export did include transfer, as we need to know the name of the 
 # export file to transfer it. instead we just transfer the latest
 # file, but there is more of a window for error doing it this way
-THECOMMANDS     = ['importinfo1', 'importlibinfo', 'importuser', 'export', 'transfer']
+THECOMMANDS     = ['importinfo1', 'importlibinfo', 'importuser', 'export',\
+                'transfer', 'stats']
 CMDIMPORT1      = 0
 CMDIMPORT_LIB   = 1
 CMDIMPORT_USR   = 2
 CMDEXPORT       = 3
 CMDTRANSFER     = 4
+CMDSTATS        = 5
 
 
 
@@ -64,7 +66,7 @@ if __name__ == "__main__":
         myCon      = sqlite3.connect(DBFILE)
         myCursor   = myCon.cursor()
     
-        print 'Start Reading Files'
+        print 'Start Reading RDS log Files'
         try:
             for file in os.listdir(RDS_FOLDER):
                 rds_data.runReport(file, myCursor)
@@ -79,27 +81,47 @@ if __name__ == "__main__":
             msg['To']       = TOADDR
 
             s               = smtplib.SMTP('localhost')
-            s.sendmail(me, [TOADDR], msg.as_string())
+            s.sendmail(FROMADDR, [TOADDR], msg.as_string())
             s.quit()
-            myCon.close()
+        # end try
+        
+        # now sum the statistics
+        print "Recording RDS statistics"
+        rds_data.recordStats(myCursor)
+        myCon.commit()
+        
+        myCon.close()
     # end if
     
     if THECOMMANDS[CMDIMPORT_LIB] in theCom:
-    
-        print 'Start Reading RDMP Files' 
-        # copy files to a temporary place where we can rename thme
-        rdmp_lib_data.walktree(LIB_DATA_FOLDER,RDMP_FOLDER)
-        # rename the files to the rdmp_X
-        rdmp_lib_data.renameRDMP(RDMP_FOLDER)
-        
         myCon      = sqlite3.connect(DBFILE)
         myCursor   = myCon.cursor()
-    
-        # Read all these xml files, and get the data from them
-        rdmp_lib_data.extractFromRDMP(RDMP_FOLDER, myCursor)
-        myCon.commit()
+        
+        print 'Start Reading RDMP Files' 
+        try:
+            # copy files to a temporary place where we can rename thme
+            rdmp_lib_data.walktree(LIB_DATA_FOLDER,RDMP_FOLDER)
+            # rename the files to the rdmp_X
+            rdmp_lib_data.renameRDMP(RDMP_FOLDER)
+            
+            # Read all these xml files, and get the data from them
+            rdmp_lib_data.extractFromRDMP(RDMP_FOLDER, myCursor)
+            myCon.commit()
+            
+            print 'Import data from RDMP Files Complete'
+        except:
+            ermsg = 'An error occured reading %s' %RDMP_FOLDER
+            print ermsg
+            msg    = MIMEText(ermsg)
+            msg['subject']  = ermsg
+            msg['From']     = FROMADDR
+            msg['To']       = TOADDR
+
+            s               = smtplib.SMTP('localhost')
+            s.sendmail(FROMADDR, [TOADDR], msg.as_string())
+            s.quit()
+        # end try
         myCon.close()
-        print 'Import data from RDMP Files Complete'
     # end info
     
     if THECOMMANDS[CMDIMPORT_USR] in theCom:
@@ -123,7 +145,7 @@ if __name__ == "__main__":
         # -e option causes a syntax error on my mac
         #osCom           = 'echo -e ".mode csv\n.header on\n.out ' + EXPORT_DIR + exportFile
         osCom           = 'echo ".mode csv\n.header on\n.out ' + EXPORT_DIR + exportFile
-        osCom           += '\nselect * from %s;" | sqlite3 %s' %(RDS_TABLE, DBFILE)
+        osCom           += '\nselect * from %s;" | sqlite3 %s' %(RDS_STATS_TABLE, DBFILE)
         print osCom
         os.system(osCom)
 
@@ -164,8 +186,138 @@ if __name__ == "__main__":
         msg['To']       = TOADDR
 
         s               = smtplib.SMTP('localhost')
-        s.sendmail(me, [TOADDR], msg.as_string())
+        s.sendmail(FROMADDR, [TOADDR], msg.as_string())
         s.quit()
     # endif
+    
+    if THECOMMANDS[CMDSTATS] in theCom:
+        myCon      = sqlite3.connect(DBFILE)
+        myCursor   = myCon.cursor()
+        
+        # get the statistics
+        #myToday = datetime.date.today()
+        myToday = datetime.date(year=2014, month=10, day=10)
+        oneDay  = datetime.timedelta(days=1)
+        # NOTE: The scripts run at 4am, so best to consider the logs from the ]
+        # previous day.
+        myToday = myToday - oneDay
+        
+        myTomorrow = myToday + oneDay
+        myStats     = {}
+        
+        ####################
+        # *1 Get the total storage today from rds_logs
+        sqlCom      = "select total_space from %s " %RDS_STATS_TABLE
+        sqlCom      += "where run_date == '%s';" %myToday.strftime('%Y-%m-%d')
+        
+        myCursor.execute(sqlCom)
+        myRec       = myCursor.fetchone()
+        myStats['StorageUsed'] = float(myRec[0] or 0)
+        ####################
+        # *2 what is the largest difference in storage between consecutive days over all time
+        sqlCom      = "select max(space_lag) from %s " %RDS_STATS_TABLE
+        
+        myCursor.execute(sqlCom)
+        myRec       = myCursor.fetchone()
+        myStats['StorageDailyMax'] = float(myRec[0] or 0)
+        
+        ####################
+        # *3 Previous 30 days storage (rdslogs space) 
+        monthAgo    = myToday - ONEMONTH*oneDay
+        
+        sqlCom      = "select total_space from %s " %RDS_STATS_TABLE
+        sqlCom      += "where run_date <= '%s' limit 1" %monthAgo.strftime('%Y-%m-%d')
+        
+        myCursor.execute(sqlCom)
+        myRec       = myCursor.fetchone()
+        myStats['Storage30Days'] = float(myRec[0] or 0)
+        
+        
+        ####################
+        # *4 Previous from 60 to 30 days
+        twoMonthsAgo = monthAgo - ONEMONTH*oneDay
+        
+        sqlCom      = "select total_space from %s " %RDS_STATS_TABLE
+        sqlCom      += "where run_date <= '%s' limit 1;" %twoMonthsAgo.strftime('%Y-%m-%d')
+        
+        myCursor.execute(sqlCom)
+        myRec       = myCursor.fetchone()
+        myStats['Storage60Days'] = float(myRec[0] or 0)
+        
+        ####################
+        # *5 The number of plans with allocated storage.  anything that exists in RDSLogs
+        sqlCom      = "select count(distinct(plan)) from %s" %RDS_TABLE
+        
+        myCursor.execute(sqlCom)
+        myRec       = myCursor.fetchone()
+        myStats['noPlans'] = int(myRec[0] or 0)
+        
+        ####################
+        # *6 The number of plans with data, that is where the RDS logs space > 10MB
+        sqlCom = 'select plan, sum(space) from %s group by plan' %RDS_TABLE
+        myCursor.execute(sqlCom)
+        myRecs      = myCursor.fetchall()
+        
+        myStats['noPlansWithData']  = 0
+        for rec in myRecs:
+            space = float(rec[1]) * TERABYTE / MEGABYTE
+            myStats['noPlansWithData'] +=  int(space > 10.0)
+        # next rec
+        
+        
+        ####################
+        # 7* New in the last 30 days
+        sqlCom = 'select plan, min(run_date) from %s group by plan' %RDS_TABLE
+        myCursor.execute(sqlCom)
+        myRecs      = myCursor.fetchall()
+        
+        myStats['newPlans30Days'] = 0
+        
+        for rec in myRecs:
+            datePlanNew     = dateFromString(rec[1], '%Y-%m-%d %H:%M:%S', False)
+            myStats['newPlans30Days'] = int(datePlanNew <= monthAgo)
+        # next rec
+        
+        ####################
+        # 8* Active in the last 30 days =>  the file count has changed in the last 30 days.
+        sqlCom = 'select plan, number_of_files from %s ' %RDS_TABLE
+        sqlCom += 'where run_date > "%s" order by plan;' %monthAgo.strftime('%Y-%m-%d')
+        #print sqlCom
+        myCursor.execute(sqlCom)
+        myRecs      = myCursor.fetchall()
+        
+        myStats['activePlans30Days'] = 0
+        
+        nextPlan = False
+        for rec in myRecs:
+            plan = rec[0]
+            noFiles = rec[1]
+            
+            if nextPlan:
+                if comPlan == plan:
+                    continue
+                else:
+                    nextPlan = False
+            
+            # order n squared, not too good
+            for comRec in myRecs:
+                comPlan = comRec[0]
+                comNoFiles = comRec[1]
+                if comPlan != plan:
+                    break
+                elif noFiles != comNoFiles:
+                    myStats['activePlans30Days'] += 1
+                    nextPlan = True
+                    break
+             
+                
+        ####################
+        fp = open('stats.csv', 'w')
+        for k in myStats.keys():
+            fp.write( ','.join((k, str(myStats[k]))) + '\n')
+        
+        
+        
+        
     
  # end if __main__   
