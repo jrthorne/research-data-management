@@ -40,16 +40,16 @@ MEGABYTE        = 9.7656e-4
 GIGABYTE        = 1.0000
 TERABYTE        = 1024.0
 
-#RDS_FOLDER      = '/Data/maint/Reporting/prd/reports/'
-#ZID_LOG_FOLDER  = '/livearc/volatile/logs/'
-#EXPORT_DIR      = '/home/nfs/z3007136_sa/rdscsv/'
+RDS_FOLDER      = '/Data/maint/Reporting/prd/reports/'
+ZID_LOG_FOLDER  = '/livearc/volatile/logs/'
+EXPORT_DIR      = '/home/nfs/z3007136_sa/rdscsv/'
 ZID_LOG_FILES     = ['http.1.log', 'http.2.log']
 
-ZID_LOG_FOLDER  = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Data/LiveArcLogs/'
+#ZID_LOG_FOLDER  = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Data/LiveArcLogs/'
 LIB_DATA_FOLDER = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Data/rdmp/'
 RDMP_FOLDER      = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Output/rdmp_files/'
-EXPORT_DIR       = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Output/rdscsv/'
-RDS_FOLDER       = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Data/email/'
+#EXPORT_DIR       = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Output/rdscsv/'
+#RDS_FOLDER       = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Data/email/'
 EXPORT_PREFIX    = 'rdslog_'
 # J1.3, but not the prefix above
 RDS_TABLE        = 'serverstatus_rds_log'

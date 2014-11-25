@@ -65,12 +65,23 @@ if __name__ == "__main__":
         myCursor   = myCon.cursor()
     
         print 'Start Reading Files'
-        for file in os.listdir(RDS_FOLDER):
-            rds_data.runReport(file, myCursor)
-            myCon.commit()
-        print 'Reading Files Complete'
-        
-        myCon.close()
+        try:
+            for file in os.listdir(RDS_FOLDER):
+                rds_data.runReport(file, myCursor)
+                myCon.commit()
+            print 'Reading Files Complete'
+        except:
+            ermsg = 'An error occured reading %s' %RDS_FOLDER
+            print ermsg
+            msg    = MIMEText(ermsg)
+            msg['subject']  = ermsg
+            msg['From']     = FROMADDR
+            msg['To']       = TOADDR
+
+            s               = smtplib.SMTP('localhost')
+            s.sendmail(me, [TOADDR], msg.as_string())
+            s.quit()
+            myCon.close()
     # end if
     
     if THECOMMANDS[CMDIMPORT_LIB] in theCom:
