@@ -200,11 +200,33 @@ if __name__ == "__main__":
         oneDay  = datetime.timedelta(days=1)
         # NOTE: The scripts run at 4am, so best to consider the logs from the ]
         # previous day.
-        myToday = myToday - oneDay
+        myToday         = myToday - oneDay
         
-        myTomorrow = myToday + oneDay
-        myStats     = {}
+        myTomorrow      = myToday + oneDay
+        myStats         = {}
+        # sk stands for statistics keys
+        sk              = ['RDMPCompleted', 'RDMPStorage', 'RDMPData', 'StorageUsed', \
+                        'Storage30Days', 'Storage60Days', 'StorageDailyMax', 'UsersRDMP', \
+                        'UsersTotal', 'Users30Days', 'newPlans30Days', 'activePlans30Days']
+        # initialise
+        for k in sk:
+            myStats[k]  = "Not available"
+        # next k
         
+        # indexes for sk
+        RDMPCompleted   = 0 # Not Available Yet
+        RDMPStorage     = 1 #5
+        RDMPData        = 2 #6
+        StorageUsed     = 3 #1
+        Storage30Days   = 4 #3
+        Storage60Days   = 5 #4
+        StorageDailyMax = 6 #2
+        UsersRDMP       = 7 # Not Available Yet
+        UsersTotal      = 8 # Not Available Yet
+        Users30Days     = 9 # Not Available Yet
+        newPlans30Days  = 10 #7 Not in Shane's list
+        activePlans30Days = 11 #8 Not in Shane's list
+ 
         ####################
         # *1 Get the total storage today from rds_logs
         sqlCom      = "select total_space from %s " %RDS_STATS_TABLE
@@ -212,25 +234,26 @@ if __name__ == "__main__":
         
         myCursor.execute(sqlCom)
         myRec       = myCursor.fetchone()
-        myStats['StorageUsed'] = float(myRec[0] or 0)
+        myStats[sk[StorageUsed]] = float(myRec[0] or 0)
         ####################
         # *2 what is the largest difference in storage between consecutive days over all time
-        sqlCom      = "select max(space_lag) from %s " %RDS_STATS_TABLE
+        sqlCom      = "select max(space_lag)/%d from %s " %(TERABYTE, RDS_STATS_TABLE)
         
         myCursor.execute(sqlCom)
         myRec       = myCursor.fetchone()
-        myStats['StorageDailyMax'] = float(myRec[0] or 0)
+        myStats[sk[StorageDailyMax]] = float(myRec[0] or 0)
         
         ####################
         # *3 Previous 30 days storage (rdslogs space) 
         monthAgo    = myToday - ONEMONTH*oneDay
         
         sqlCom      = "select total_space from %s " %RDS_STATS_TABLE
-        sqlCom      += "where run_date <= '%s' limit 1" %monthAgo.strftime('%Y-%m-%d')
+        sqlCom      += "where run_date <= '%s' order by run_date desc  limit 1" %monthAgo.strftime('%Y-%m-%d')
+        print sqlCom
         
         myCursor.execute(sqlCom)
         myRec       = myCursor.fetchone()
-        myStats['Storage30Days'] = float(myRec[0] or 0)
+        myStats[sk[Storage30Days]] = float(myRec[0] or 0)
         
         
         ####################
@@ -238,11 +261,12 @@ if __name__ == "__main__":
         twoMonthsAgo = monthAgo - ONEMONTH*oneDay
         
         sqlCom      = "select total_space from %s " %RDS_STATS_TABLE
-        sqlCom      += "where run_date <= '%s' limit 1;" %twoMonthsAgo.strftime('%Y-%m-%d')
+        sqlCom      += "where run_date <= '%s' order by run_date desc  limit 1;" %twoMonthsAgo.strftime('%Y-%m-%d')
+        print sqlCom
         
         myCursor.execute(sqlCom)
         myRec       = myCursor.fetchone()
-        myStats['Storage60Days'] = float(myRec[0] or 0)
+        myStats[sk[Storage60Days]] = float(myRec[0] or 0)
         
         ####################
         # *5 The number of plans with allocated storage.  anything that exists in RDSLogs
@@ -250,7 +274,7 @@ if __name__ == "__main__":
         
         myCursor.execute(sqlCom)
         myRec       = myCursor.fetchone()
-        myStats['noPlans'] = int(myRec[0] or 0)
+        myStats[sk[RDMPStorage]] = int(myRec[0] or 0)
         
         ####################
         # *6 The number of plans with data, that is where the RDS logs space > 10MB
@@ -258,10 +282,10 @@ if __name__ == "__main__":
         myCursor.execute(sqlCom)
         myRecs      = myCursor.fetchall()
         
-        myStats['noPlansWithData']  = 0
+        myStats[sk[RDMPData]]  = 0
         for rec in myRecs:
             space = float(rec[1]) * TERABYTE / MEGABYTE
-            myStats['noPlansWithData'] +=  int(space > 10.0)
+            myStats[sk[RDMPData]] +=  int(space > 10.0)
         # next rec
         
         
@@ -271,11 +295,11 @@ if __name__ == "__main__":
         myCursor.execute(sqlCom)
         myRecs      = myCursor.fetchall()
         
-        myStats['newPlans30Days'] = 0
+        myStats[sk[newPlans30Days]] = 0
         
         for rec in myRecs:
             datePlanNew     = dateFromString(rec[1], '%Y-%m-%d %H:%M:%S', False)
-            myStats['newPlans30Days'] = int(datePlanNew <= monthAgo)
+            myStats[sk[newPlans30Days]] = int(datePlanNew <= monthAgo)
         # next rec
         
         ####################
@@ -286,7 +310,7 @@ if __name__ == "__main__":
         myCursor.execute(sqlCom)
         myRecs      = myCursor.fetchall()
         
-        myStats['activePlans30Days'] = 0
+        myStats[sk[activePlans30Days]] = 0
         
         nextPlan = False
         for rec in myRecs:
@@ -306,14 +330,14 @@ if __name__ == "__main__":
                 if comPlan != plan:
                     break
                 elif noFiles != comNoFiles:
-                    myStats['activePlans30Days'] += 1
+                    myStats[sk[activePlans30Days]] += 1
                     nextPlan = True
                     break
              
                 
         ####################
         fp = open('stats.csv', 'w')
-        for k in myStats.keys():
+        for k in sk:
             fp.write( ','.join((k, str(myStats[k]))) + '\n')
         
         
