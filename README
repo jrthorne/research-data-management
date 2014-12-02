@@ -1,0 +1,59 @@
+const.py has all constants. Look here first for values
+
+Data is collated into an sqlite3 database named in const.py by
+DBFILE.
+
+I have tried to make the program fault tolerant, and if files can not be
+read in directories, or a fatal error occurs, an email is sent to
+TOADDR. I have tried to allow the program to continue after non fatal
+errors
+
+The command line executable is 
+0)rds_rdmp_data.py
+which calls functions in 
+1)rdmp_lib_data.py
+2)rds_data.py
+3)user_access.py
+
+0) Must be run as root, as some of the log files are only readable by root.
+It is passed command line parameters, and these are shown if you execute
+it with no command line parameters. They are
+
+* importrdsinfo
+The functions for this are in rds_data.py. This reads all the files in 
+RDS_FOLDER (except ones starting with '.'), and parses the text
+to find the data to import into RDS_TABLE, that is space, plan etc.
+the latest file name is stored, and when called again, all files
+that have been read are ignored.
+
+* importlibinfo
+The functions for this are in rdmp_lib_data.py.
+This reads all the files in RDMP_FOLDER, and moves them into 
+RDMP_FOLDER giving them an .xml extension. The XML is parsed
+using python's ElementTree, and the RDMP_TABLE is populated
+
+* importuser
+The functions or this are in user_access.py.
+ZID_LOG_FILES (http.1.log, http.2.log) are checked as
+to which is newer. The newer log file is processed, and data
+is gathered once a log date is greater than that already stored 
+in the database or 1st Jan 1970 if no date exists in the database.
+A user is stored only once in the table with a first access time
+that does not change. If they are found again in the log file, 
+the last access time is updated.
+
+* export
+This selects everything from the RDS_STATS_TABLE and exports
+it to a csv file which is named after teh date and put in
+EXPORT_DIR
+
+* transfer
+This emails the latest CSV file in EXPORT_DIR to TOADDR
+
+* stats
+This emails statistics in CSV form to TOADDR. The statistics are
+generated from the tables to give the results as per the specifications
+Shane showed me on the mock-up he created of the statistics page.
+
+Root crontab now has
+0 4 * * * * /home/nfs/z3007136_sa/rds_rdmp_data.py importrdsinfo importlibinfo importuser export transfer stats
