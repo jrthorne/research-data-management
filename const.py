@@ -50,6 +50,7 @@ LIB_DATA_FOLDER  = '/livearc/volatile/logs/'
 RDMP_FOLDER      = '/home/nfs/z3007136_sa/rdmp_files/'
 EXPORT_DIR      = '/home/nfs/z3007136_sa/rdscsv/'
 RDS_FOLDER      = '/Data/maint/Reporting/prd/reports/'
+DBFILE          = '/home/nfs/z3007136_sa/db.sqlite3'
 
 # local
 # ZID_LOG_FOLDER  = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Data/LiveArcLogs/'
@@ -57,6 +58,7 @@ RDS_FOLDER      = '/Data/maint/Reporting/prd/reports/'
 # RDMP_FOLDER      = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Output/rdmp_files/'
 # EXPORT_DIR       = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Output/rdscsv/'
 # RDS_FOLDER       = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Data/email/'
+#DBFILE          = "/Volumes/daddy2/Users/jason/public_html/LTRDS/db.sqlite3"
 ##### folders end
 
 STATS_CSV       = 'stats.csv'
@@ -66,9 +68,9 @@ RDS_TABLE        = 'serverstatus_rds_log'
 RDS_STATS_TABLE  = 'serverstatus_rds_stat'
 RDMP_TABLE       = 'serverstatus_rdmp_info'
 USER_ACC_TABLE   = 'serverstatus_user_access'
-DBFILE          = "/Volumes/daddy2/Users/jason/public_html/LTRDS/db.sqlite3"
 FROMADDR        = 'root@infplfs010.sc.it.unsw.edu.au'
-TOADDR          = 'research.manager@unsw.edu.au, j.thorne@unsw.edu.au'
+TOADDR          = 'research.manager@unsw.edu.au'
+#TOADDR          = 'j.thorne@unsw.edu.au'
 
 # SK stands for statistics keys
 SK              = ['RDMPCompleted', 'RDMPStorage', 'RDMPData', 'StorageUsed', \

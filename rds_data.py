@@ -16,7 +16,7 @@ from const import *
 ##########################################
 def runReport(file, myCursor):
     # only log files with .elm extension
-    if file[-4:] != '.eml':
+    if file[0] == '.':
         print "ERROR - Not an eml file: %s" %file
         return
     # end if

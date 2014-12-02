@@ -73,7 +73,8 @@ if __name__ == "__main__":
                 myCon.commit()
             print 'Reading Files Complete'
         except:
-            ermsg = 'An error occured reading RDS_FOLDER = %s' %RDS_FOLDER
+            ermsg = 'Some error occured DBFILE= %s RDS_FOLDER = %s' \
+                    %(DBFILE, RDS_FOLDER)
             print ermsg
             msg    = MIMEText(ermsg)
             msg['subject']  = ermsg
@@ -201,8 +202,8 @@ if __name__ == "__main__":
         myCursor   = myCon.cursor()
         
         # get the statistics
-        #myToday = datetime.date.today()
-        myToday = datetime.date(year=2014, month=10, day=10)
+        myToday = datetime.date.today()
+        #myToday = datetime.date(year=2014, month=10, day=10)
         oneDay  = datetime.timedelta(days=1)
         # NOTE: The scripts run at 4am, so best to consider the logs from the ]
         # previous day.
