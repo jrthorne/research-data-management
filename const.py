@@ -59,6 +59,7 @@ RDS_FOLDER      = '/Data/maint/Reporting/prd/reports/'
 # RDS_FOLDER       = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Data/email/'
 ##### folders end
 
+STATS_CSV       = 'stats.csv'
 EXPORT_PREFIX    = 'rdslog_'
 # J1.3, but not the prefix above
 RDS_TABLE        = 'serverstatus_rds_log'
@@ -72,7 +73,7 @@ TOADDR          = 'research.manager@unsw.edu.au, j.thorne@unsw.edu.au'
 # SK stands for statistics keys
 SK              = ['RDMPCompleted', 'RDMPStorage', 'RDMPData', 'StorageUsed', \
                 'Storage30Days', 'Storage60Days', 'StorageDailyMax', 'UsersRDMP', \
-                'UsersTotal', 'Users30Days', 'newPlans30Days', 'activePlans30Days']
+                'UsersTotal', 'Users30Days'] #, 'newPlans30Days', 'activePlans30Days']
 # indexes for SK
 RDMPCompleted   = 0 # Not Available Yet
 RDMPStorage     = 1 #5
@@ -86,6 +87,8 @@ UsersTotal      = 8 # Not Available Yet
 Users30Days     = 9 # Not Available Yet
 newPlans30Days  = 10 #7 Not in Shane's list
 activePlans30Days = 11 #8 Not in Shane's list
+
+RDMP_MIN_DATA   = 10.0
 
 import time, datetime
 ##########################################

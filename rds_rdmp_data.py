@@ -19,10 +19,10 @@ Filename            = 'rds_rdmp_data.py'# J1.2
 # rds_rdmp_data.py
 # J1.3|18-11-2014|JRT| changed RDSlog to rds_log for the table name.
 # also creating new file to accept the RDMP zID user info.
+# J1.4|02-12-2014|JRT| fault tolerance and user stats
 ####################################################################
-Version             = 'J1.3'
+Version             = 'J1.4'
 ####################################################################
-
 import sqlite3
 import sys
 import time
@@ -41,7 +41,7 @@ import rds_data, rdmp_lib_data, user_access
 # export did include transfer, as we need to know the name of the 
 # export file to transfer it. instead we just transfer the latest
 # file, but there is more of a window for error doing it this way
-THECOMMANDS     = ['importinfo1', 'importlibinfo', 'importuser', 'export',\
+THECOMMANDS     = ['importrdsinfo', 'importlibinfo', 'importuser', 'export',\
                 'transfer', 'stats']
 CMDIMPORT1      = 0
 CMDIMPORT_LIB   = 1
@@ -238,7 +238,7 @@ if __name__ == "__main__":
         
         sqlCom      = "select total_space from %s " %RDS_STATS_TABLE
         sqlCom      += "where run_date <= '%s' order by run_date desc  limit 1" %monthAgo.strftime('%Y-%m-%d')
-        print sqlCom
+        #print sqlCom
         
         myCursor.execute(sqlCom)
         myRec       = myCursor.fetchone()
@@ -251,7 +251,7 @@ if __name__ == "__main__":
         
         sqlCom      = "select total_space from %s " %RDS_STATS_TABLE
         sqlCom      += "where run_date <= '%s' order by run_date desc  limit 1;" %twoMonthsAgo.strftime('%Y-%m-%d')
-        print sqlCom
+        #print sqlCom
         
         myCursor.execute(sqlCom)
         myRec       = myCursor.fetchone()
@@ -267,19 +267,20 @@ if __name__ == "__main__":
         
         ####################
         # *6 The number of plans with data, that is where the RDS logs space > 10MB
-        sqlCom = 'select plan, sum(space) from %s group by plan' %RDS_TABLE
+        sqlCom = 'select plan, max(space) from %s group by plan' %RDS_TABLE
         myCursor.execute(sqlCom)
         myRecs      = myCursor.fetchall()
         
         myStats[SK[RDMPData]]  = 0
         for rec in myRecs:
             space = float(rec[1]) * TERABYTE / MEGABYTE
-            myStats[SK[RDMPData]] +=  int(space > 10.0)
+            myStats[SK[RDMPData]] +=  int(space > RDMP_MIN_DATA)
         # next rec
         
         
         ####################
         # 7* New in the last 30 days
+        """
         sqlCom = 'select plan, min(run_date) from %s group by plan' %RDS_TABLE
         myCursor.execute(sqlCom)
         myRecs      = myCursor.fetchall()
@@ -290,10 +291,12 @@ if __name__ == "__main__":
             datePlanNew     = dateFromString(rec[1], '%Y-%m-%d %H:%M:%S', False)
             myStats[SK[newPlans30Days]] = int(datePlanNew <= monthAgo)
         # next rec
+        """
         
         ####################
         # 8* Active in the last 30 days =>  the file count has changed in the last 30 days.
         sqlCom = 'select plan, number_of_files from %s ' %RDS_TABLE
+        """
         sqlCom += 'where run_date > "%s" order by plan;' %monthAgo.strftime('%Y-%m-%d')
         #print sqlCom
         myCursor.execute(sqlCom)
@@ -302,6 +305,7 @@ if __name__ == "__main__":
         myStats[SK[activePlans30Days]] = 0
         
         nextPlan = False
+        comPlan = None
         for rec in myRecs:
             plan = rec[0]
             noFiles = rec[1]
@@ -322,14 +326,44 @@ if __name__ == "__main__":
                     myStats[SK[activePlans30Days]] += 1
                     nextPlan = True
                     break
-             
-                
+        
+        """
+        #######################
+        # 'UsersRDMP', UsersTotal', 'Users30Days'
+        sqlCom          = "select count(*) from %s" %USER_ACC_TABLE
+        #print sqlCom
+        myCursor.execute(sqlCom)
+        myStats[SK[UsersRDMP]]       = myCursor.fetchone()[0]
+        sqlCom          = "select count(*) from %s where first_access >= '%s'" \
+                        %(USER_ACC_TABLE, (str(myToday.year) + '-01-01'))
+        #print sqlCom
+        myCursor.execute(sqlCom)
+        myStats[SK[UsersTotal]]       = myCursor.fetchone()[0]
+        
+        
+        sqlCom = sqlCom          = "select count(*) from %s where last_access >= '%s' " \
+                                    %(USER_ACC_TABLE, monthAgo.strftime('%Y-%m-%d'))
+        #print sqlCom
+        myCursor.execute(sqlCom)
+        myStats[SK[Users30Days]]       = myCursor.fetchone()[0]
+        
+        myCon.close()
+        
         ####################
-        fp = open(EXPORT_DIR + 'stats.csv', 'w')
+        csvdata         = ''
         for k in SK:
-            fp.write( ','.join((k, str(myStats[k]))) + '\n')
-        
-        
+            csvdata += ','.join((k, str(myStats[k]))) + '\n'
+        print csvdata
+            
+        # create a plain text message attachment
+        msg             = MIMEText(csvdata)
+        msg['subject']  = "RDM statistics"
+        msg['From']     = FROMADDR
+        msg['To']       = TOADDR
+
+        s               = smtplib.SMTP('localhost')
+        s.sendmail(FROMADDR, [TOADDR], msg.as_string())
+        s.quit()
         
         
     
