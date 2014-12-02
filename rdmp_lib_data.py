@@ -19,6 +19,10 @@ def walktree(top, writeto):
        and copy the files where they can be renamed for convenience'''
 
     for f in os.listdir(top):
+        # Don't read system files
+        if f[0] == ".":
+            continue
+            
         pathname = os.path.join(top, f)
         mode = os.stat(pathname)[ST_MODE]
         if S_ISDIR(mode):
@@ -34,6 +38,12 @@ def walktree(top, writeto):
         else:
             # Unknown file type, print a message
             print 'Skipping %s' % pathname
+        # end if
+    # next f
+        
+    return
+# end walktree
+
 ##########################################
 def visitfile(file):
     print 'visiting', file
@@ -90,7 +100,7 @@ def findelements(elem, level=0):
 
 ##########################################
 def extractFromRDMP(folder, myCursor):
-        
+    try:    
         for f in os.listdir(folder):
             print "READING: " + folder+f
             # only read xml files
@@ -183,7 +193,18 @@ def extractFromRDMP(folder, myCursor):
                         VALUES[KEYS[school]],
                         boolHasAward)
             myCursor.execute(sqlCom, sqlValues)
+    except:
+        ermsg = 'line113: An error occured extractFromRDMP reading %s' %(folder+f)
+        print ermsg
+        msg    = MIMEText(ermsg)
+        msg['subject']  = ermsg
+        msg['From']     = FROMADDR
+        msg['To']       = TOADDR
 
+        s               = smtplib.SMTP('localhost')
+        s.sendmail(FROMADDR, [TOADDR], msg.as_string())
+        s.quit()
+    # end try
 # end  extractFromRDMP      
 
 ##########################################

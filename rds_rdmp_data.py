@@ -5,7 +5,7 @@ Filename            = 'rds_rdmp_data.py'# J1.2
 # By:               Jason Thorne
 # Description:      Information regarding the Research Data Management
 # System is exported to .elm files on the server infplfs0XX (XX=04 to 10).
-# This script runs on the server and performs three tasks:
+# This script runs on the server and performs three taSKs:
 # import: read the eml files, parses the
 # text to extract information, dumps the informatino in to an sqlite3
 # database file.
@@ -73,7 +73,7 @@ if __name__ == "__main__":
                 myCon.commit()
             print 'Reading Files Complete'
         except:
-            ermsg = 'An error occured reading %s' %RDS_FOLDER
+            ermsg = 'An error occured reading RDS_FOLDER = %s' %RDS_FOLDER
             print ermsg
             msg    = MIMEText(ermsg)
             msg['subject']  = ermsg
@@ -110,7 +110,8 @@ if __name__ == "__main__":
             
             print 'Import data from RDMP Files Complete'
         except:
-            ermsg = 'An error occured reading %s' %RDMP_FOLDER
+            ermsg = 'line113: Something is wrong. Command %s did not work' %THECOMMANDS[CMDIMPORT_LIB]
+            ermsg += ". Check RDMP_FOLDER = %s and LIB_DATA_FOLDER = %s." %(RDMP_FOLDER, LIB_DATA_FOLDER)
             print ermsg
             msg    = MIMEText(ermsg)
             msg['subject']  = ermsg
@@ -150,27 +151,32 @@ if __name__ == "__main__":
         os.system(osCom)
 
     if THECOMMANDS[CMDTRANSFER] in theCom:
+        exportFile      = None
         # and transfer the file by email
         # The file to transfer is the newst file preceded with rdslog_
-        logFiles        = os.listdir(EXPORT_DIR)
-        # find the newest log file
-        exportFile      = None
-        logTime         = 0
-        for i in logFiles:
-            # exportprefix is at the beginning of log files
-            if i.find(EXPORT_PREFIX) == 0:
-                # The position of the time in the filename
-                timpos  = len(EXPORT_PREFIX) + 1
-                thisLogTime = int(i[timpos:-4])
-                if thisLogTime > logTime:
-                    exportFile = i
-                    logTime = thisLogTime
+        try:
+            logFiles        = os.listdir(EXPORT_DIR)
+        except:
+            pass
+        else:
+            # find the newest log file
+            logTime         = 0
+            for i in logFiles:
+                # exportprefix is at the beginning of log files
+                if i.find(EXPORT_PREFIX) == 0:
+                    # The position of the time in the filename
+                    timpos  = len(EXPORT_PREFIX) + 1
+                    thisLogTime = int(i[timpos:-4])
+                    if thisLogTime > logTime:
+                        exportFile = i
+                        logTime = thisLogTime
+                    # end if
                 # end if
-            # end if
-        # next i
+            # next i
+        # end try
 
         if exportFile == None:
-            msg             = MIMEText('The cron job was run, but no log file found')
+            msg             = MIMEText('The cron job was run, but no log file found in ' + EXPORT_DIR)
             msg['Subject']  = 'No log file found'
         else:
             fp              = open(EXPORT_DIR + exportFile, 'rb')
@@ -204,29 +210,12 @@ if __name__ == "__main__":
         
         myTomorrow      = myToday + oneDay
         myStats         = {}
-        # sk stands for statistics keys
-        sk              = ['RDMPCompleted', 'RDMPStorage', 'RDMPData', 'StorageUsed', \
-                        'Storage30Days', 'Storage60Days', 'StorageDailyMax', 'UsersRDMP', \
-                        'UsersTotal', 'Users30Days', 'newPlans30Days', 'activePlans30Days']
+        
         # initialise
-        for k in sk:
+        for k in SK:
             myStats[k]  = "Not available"
         # next k
-        
-        # indexes for sk
-        RDMPCompleted   = 0 # Not Available Yet
-        RDMPStorage     = 1 #5
-        RDMPData        = 2 #6
-        StorageUsed     = 3 #1
-        Storage30Days   = 4 #3
-        Storage60Days   = 5 #4
-        StorageDailyMax = 6 #2
-        UsersRDMP       = 7 # Not Available Yet
-        UsersTotal      = 8 # Not Available Yet
-        Users30Days     = 9 # Not Available Yet
-        newPlans30Days  = 10 #7 Not in Shane's list
-        activePlans30Days = 11 #8 Not in Shane's list
- 
+
         ####################
         # *1 Get the total storage today from rds_logs
         sqlCom      = "select total_space from %s " %RDS_STATS_TABLE
@@ -234,14 +223,14 @@ if __name__ == "__main__":
         
         myCursor.execute(sqlCom)
         myRec       = myCursor.fetchone()
-        myStats[sk[StorageUsed]] = float(myRec[0] or 0)
+        myStats[SK[StorageUsed]] = float(myRec[0] or 0)
         ####################
         # *2 what is the largest difference in storage between consecutive days over all time
         sqlCom      = "select max(space_lag)/%d from %s " %(TERABYTE, RDS_STATS_TABLE)
         
         myCursor.execute(sqlCom)
         myRec       = myCursor.fetchone()
-        myStats[sk[StorageDailyMax]] = float(myRec[0] or 0)
+        myStats[SK[StorageDailyMax]] = float(myRec[0] or 0)
         
         ####################
         # *3 Previous 30 days storage (rdslogs space) 
@@ -253,7 +242,7 @@ if __name__ == "__main__":
         
         myCursor.execute(sqlCom)
         myRec       = myCursor.fetchone()
-        myStats[sk[Storage30Days]] = float(myRec[0] or 0)
+        myStats[SK[Storage30Days]] = float(myRec[0] or 0)
         
         
         ####################
@@ -266,7 +255,7 @@ if __name__ == "__main__":
         
         myCursor.execute(sqlCom)
         myRec       = myCursor.fetchone()
-        myStats[sk[Storage60Days]] = float(myRec[0] or 0)
+        myStats[SK[Storage60Days]] = float(myRec[0] or 0)
         
         ####################
         # *5 The number of plans with allocated storage.  anything that exists in RDSLogs
@@ -274,7 +263,7 @@ if __name__ == "__main__":
         
         myCursor.execute(sqlCom)
         myRec       = myCursor.fetchone()
-        myStats[sk[RDMPStorage]] = int(myRec[0] or 0)
+        myStats[SK[RDMPStorage]] = int(myRec[0] or 0)
         
         ####################
         # *6 The number of plans with data, that is where the RDS logs space > 10MB
@@ -282,10 +271,10 @@ if __name__ == "__main__":
         myCursor.execute(sqlCom)
         myRecs      = myCursor.fetchall()
         
-        myStats[sk[RDMPData]]  = 0
+        myStats[SK[RDMPData]]  = 0
         for rec in myRecs:
             space = float(rec[1]) * TERABYTE / MEGABYTE
-            myStats[sk[RDMPData]] +=  int(space > 10.0)
+            myStats[SK[RDMPData]] +=  int(space > 10.0)
         # next rec
         
         
@@ -295,11 +284,11 @@ if __name__ == "__main__":
         myCursor.execute(sqlCom)
         myRecs      = myCursor.fetchall()
         
-        myStats[sk[newPlans30Days]] = 0
+        myStats[SK[newPlans30Days]] = 0
         
         for rec in myRecs:
             datePlanNew     = dateFromString(rec[1], '%Y-%m-%d %H:%M:%S', False)
-            myStats[sk[newPlans30Days]] = int(datePlanNew <= monthAgo)
+            myStats[SK[newPlans30Days]] = int(datePlanNew <= monthAgo)
         # next rec
         
         ####################
@@ -310,7 +299,7 @@ if __name__ == "__main__":
         myCursor.execute(sqlCom)
         myRecs      = myCursor.fetchall()
         
-        myStats[sk[activePlans30Days]] = 0
+        myStats[SK[activePlans30Days]] = 0
         
         nextPlan = False
         for rec in myRecs:
@@ -330,14 +319,14 @@ if __name__ == "__main__":
                 if comPlan != plan:
                     break
                 elif noFiles != comNoFiles:
-                    myStats[sk[activePlans30Days]] += 1
+                    myStats[SK[activePlans30Days]] += 1
                     nextPlan = True
                     break
              
                 
         ####################
-        fp = open('stats.csv', 'w')
-        for k in sk:
+        fp = open(EXPORT_DIR + 'stats.csv', 'w')
+        for k in SK:
             fp.write( ','.join((k, str(myStats[k]))) + '\n')
         
         

@@ -42,16 +42,23 @@ MEGABYTE        = 9.7656e-4
 GIGABYTE        = 1.0000
 TERABYTE        = 1024.0
 
-#RDS_FOLDER      = '/Data/maint/Reporting/prd/reports/'
-#ZID_LOG_FOLDER  = '/livearc/volatile/logs/'
-#EXPORT_DIR      = '/home/nfs/z3007136_sa/rdscsv/'
 ZID_LOG_FILES     = ['http.1.log', 'http.2.log']
+##### folders begin
+# server
+ZID_LOG_FOLDER  = '/livearc/volatile/logs/'
+LIB_DATA_FOLDER  = '/livearc/volatile/logs/'
+RDMP_FOLDER      = '/home/nfs/z3007136_sa/rdmp_files/'
+EXPORT_DIR      = '/home/nfs/z3007136_sa/rdscsv/'
+RDS_FOLDER      = '/Data/maint/Reporting/prd/reports/'
 
-ZID_LOG_FOLDER  = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Data/LiveArcLogs/'
-LIB_DATA_FOLDER = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Data/rdmp/'
-RDMP_FOLDER      = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Output/rdmp_files/'
-EXPORT_DIR       = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Output/rdscsv/'
-RDS_FOLDER       = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Data/email/'
+# local
+# ZID_LOG_FOLDER  = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Data/LiveArcLogs/'
+# LIB_DATA_FOLDER = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Data/rdmp/'
+# RDMP_FOLDER      = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Output/rdmp_files/'
+# EXPORT_DIR       = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Output/rdscsv/'
+# RDS_FOLDER       = '/Volumes/daddy2/Users/jason/Documents/outsideWork/LTRDS/Data/email/'
+##### folders end
+
 EXPORT_PREFIX    = 'rdslog_'
 # J1.3, but not the prefix above
 RDS_TABLE        = 'serverstatus_rds_log'
@@ -60,7 +67,25 @@ RDMP_TABLE       = 'serverstatus_rdmp_info'
 USER_ACC_TABLE   = 'serverstatus_user_access'
 DBFILE          = "/Volumes/daddy2/Users/jason/public_html/LTRDS/db.sqlite3"
 FROMADDR        = 'root@infplfs010.sc.it.unsw.edu.au'
-TOADDR          = 'j.thorne@unsw.edu.au'
+TOADDR          = 'research.manager@unsw.edu.au, j.thorne@unsw.edu.au'
+
+# SK stands for statistics keys
+SK              = ['RDMPCompleted', 'RDMPStorage', 'RDMPData', 'StorageUsed', \
+                'Storage30Days', 'Storage60Days', 'StorageDailyMax', 'UsersRDMP', \
+                'UsersTotal', 'Users30Days', 'newPlans30Days', 'activePlans30Days']
+# indexes for SK
+RDMPCompleted   = 0 # Not Available Yet
+RDMPStorage     = 1 #5
+RDMPData        = 2 #6
+StorageUsed     = 3 #1
+Storage30Days   = 4 #3
+Storage60Days   = 5 #4
+StorageDailyMax = 6 #2
+UsersRDMP       = 7 # Not Available Yet
+UsersTotal      = 8 # Not Available Yet
+Users30Days     = 9 # Not Available Yet
+newPlans30Days  = 10 #7 Not in Shane's list
+activePlans30Days = 11 #8 Not in Shane's list
 
 import time, datetime
 ##########################################

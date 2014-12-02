@@ -6,6 +6,8 @@ from time import strftime
 from time import gmtime
 import datetime
 import os
+from email.mime.text import MIMEText
+import smtplib
 
 ##########################################
 def populate_user_access_table(myCursor):
@@ -18,11 +20,24 @@ def populate_user_access_table(myCursor):
     modTime = datetime.datetime(1970, 1, 1, 0, 0)
     logFileName = ZID_LOG_FOLDER + ZID_LOG_FILES[0]
     for file in ZID_LOG_FILES:
-        print "%s last modified: %s" % (file, time.ctime(os.path.getmtime(ZID_LOG_FOLDER + file)))
-        if datetime.datetime.fromtimestamp(os.path.getmtime(ZID_LOG_FOLDER + file)) > modTime:
-            modTime = datetime.datetime.fromtimestamp(os.path.getmtime(ZID_LOG_FOLDER + file))
-            logFileName = ZID_LOG_FOLDER + file
-        # end if
+        try:
+            print "%s last modified: %s" % (file, time.ctime(os.path.getmtime(ZID_LOG_FOLDER + file)))
+            if datetime.datetime.fromtimestamp(os.path.getmtime(ZID_LOG_FOLDER + file)) > modTime:
+                modTime = datetime.datetime.fromtimestamp(os.path.getmtime(ZID_LOG_FOLDER + file))
+                logFileName = ZID_LOG_FOLDER + file
+            # end if
+        except: # if the file does not exist, send an email to alert, then return
+            ermsg = 'An error occured reading ZID_LOG_FOLDER = %s' %(ZID_LOG_FOLDER + file)
+            print ermsg
+            msg    = MIMEText(ermsg)
+            msg['subject']  = ermsg
+            msg['From']     = FROMADDR
+            msg['To']       = TOADDR
+
+            s               = smtplib.SMTP('localhost')
+            s.sendmail(FROMADDR, [TOADDR], msg.as_string())
+            s.quit()
+            return
     # next file
     
     print "Using %s" %logFileName

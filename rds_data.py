@@ -5,6 +5,7 @@ import os
 import datetime
 import smtplib
 from email.mime.text import MIMEText
+import smtplib
 import os, sys
 from stat import *
 import shutil
@@ -119,11 +120,11 @@ def recordStats(myCursor):
             return
         else:
             # we only want the date here
-            lastDate = dateFromString(lastDate, "%Y-%m-%d %H:%M:%S", False) - oneDay
+            lastDate = dateFromString(lastDate, "%Y-%m-%d", False) - oneDay
         # end if
     else:
         # we only want the date here
-        lastDate = dateFromString(lastDate, "%Y-%m-%d %H:%M:%S", False)
+        lastDate = dateFromString(lastDate, "%Y-%m-%d", False)
     # end if
     
    
