@@ -346,13 +346,12 @@ if __name__ == "__main__":
         """
         #######################
         # 'UsersRDMP', UsersTotal', 'Users30Days'
-        sqlCom          = "select count(*) from %s" %USER_ACC_TABLE
+        #sqlCom          = "select count(*) from %s" %USER_ACC_TABLE
         #print sqlCom
-        myCursor.execute(sqlCom)
-        myStats[SK[UsersRDMP]]       = myCursor.fetchone()[0]
+        #myCursor.execute(sqlCom)
+        #myStats[SK[UsersRDMP]]       = myCursor.fetchone()[0]
         sqlCom          = "select count(*) from %s where first_access >= '%s'" \
                         %(USER_ACC_TABLE, (str(myToday.year) + '-01-01'))
-        #print sqlCom
         myCursor.execute(sqlCom)
         myStats[SK[UsersTotal]]       = myCursor.fetchone()[0]
         
