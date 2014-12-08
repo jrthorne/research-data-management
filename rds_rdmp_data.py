@@ -221,7 +221,8 @@ if __name__ == "__main__":
         # *1 Get the total storage today from rds_logs
         sqlCom      = "select total_space from %s " %RDS_STATS_TABLE
         sqlCom      += "where run_date == '%s';" %myToday.strftime('%Y-%m-%d')
-        
+        print "*1 Get the total storage today from rds_logs"
+        print sqlCom
         myCursor.execute(sqlCom)
         myRec       = myCursor.fetchone()
         myStats[SK[StorageUsed]] = float(myRec[0] or 0)
@@ -229,6 +230,8 @@ if __name__ == "__main__":
         # *2 what is the largest difference in storage between consecutive days over all time
         sqlCom      = "select max(space_lag)/%d from %s " %(TERABYTE, RDS_STATS_TABLE)
         
+        print "*2 what is the largest difference in storage between consecutive days over all time"
+        print sqlCom
         myCursor.execute(sqlCom)
         myRec       = myCursor.fetchone()
         myStats[SK[StorageDailyMax]] = float(myRec[0] or 0)
@@ -237,6 +240,8 @@ if __name__ == "__main__":
         # *3 Previous 30 days storage (rdslogs space) 
         monthAgo    = myToday - ONEMONTH*oneDay
         
+        print "*3 Previous 30 days storage (rdslogs space) "
+        print sqlCom
         sqlCom      = "select total_space from %s " %RDS_STATS_TABLE
         sqlCom      += "where run_date <= '%s' order by run_date desc  limit 1" %monthAgo.strftime('%Y-%m-%d')
         #print sqlCom
@@ -250,6 +255,8 @@ if __name__ == "__main__":
         # *4 Previous from 60 to 30 days
         twoMonthsAgo = monthAgo - ONEMONTH*oneDay
         
+        print "*4 Previous from 60 to 30 days"
+        print sqlCom
         sqlCom      = "select total_space from %s " %RDS_STATS_TABLE
         sqlCom      += "where run_date <= '%s' order by run_date desc  limit 1;" %twoMonthsAgo.strftime('%Y-%m-%d')
         #print sqlCom
@@ -262,6 +269,9 @@ if __name__ == "__main__":
         # *5 The number of plans with allocated storage.  anything that exists in RDSLogs
         sqlCom      = "select count(distinct(plan)) from %s" %RDS_TABLE
         
+        print "*5 The number of plans with allocated storage.  anything that exists in RDSLogs"
+        print sqlCom
+        
         myCursor.execute(sqlCom)
         myRec       = myCursor.fetchone()
         myStats[SK[RDMPStorage]] = int(myRec[0] or 0)
@@ -271,6 +281,9 @@ if __name__ == "__main__":
         sqlCom = 'select plan, max(space) from %s group by plan' %RDS_TABLE
         myCursor.execute(sqlCom)
         myRecs      = myCursor.fetchall()
+        
+        print "*6 The number of plans with data, that is where the RDS logs space > 10MB"
+        print sqlCom
         
         myStats[SK[RDMPData]]  = 0
         for rec in myRecs:

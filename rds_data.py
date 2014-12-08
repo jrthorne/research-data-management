@@ -104,6 +104,7 @@ def recordStats(myCursor):
     
     # when was this last run?
     sqlCom      = "select max(run_date) from %s;" %RDS_STATS_TABLE
+    
     myCursor.execute(sqlCom)
     myRec       = myCursor.fetchone()
     lastDate    = myRec[0] or 0
@@ -127,32 +128,55 @@ def recordStats(myCursor):
         lastDate = dateFromString(lastDate, "%Y-%m-%d", False)
     # end if
     
-   
-    
     sqlFields   = "run_date, total_space, number_of_files, number_of_plans, "
     sqlFields   += "space_lag, files_lag, plans_lag"
     thisDay     = lastDate
     lastStorage = 0
     lastPlans = 0
     lastFiles = 0
+    
+    # sqlCondition limits the querie to data for thisDay
+    sqlCondition = "where run_date < '%s' " %(thisDay+oneDay).strftime('%Y-%m-%d')
+    sqlCondition += "and run_date > '%s';" %thisDay.strftime('%Y-%m-%d')
+    sqlCom      = "select sum(space)/%f from %s " %(TERABYTE, RDS_TABLE)  + sqlCondition
+           
+    myCursor.execute(sqlCom)
+    myRec       = myCursor.fetchone()
+    lastStorage = float(myRec[0] or 0)
+    
+    sqlCom      = "select count(distinct(plan)) from %s " %RDS_TABLE + sqlCondition
+    
+    myCursor.execute(sqlCom)
+    myRec       = myCursor.fetchone()
+    lastPlans     = int(myRec[0] or 0)
+    
+    # get the total number of files for this day (sqlCondition)
+    sqlCom      = "select sum(number_of_files) from %s " %RDS_TABLE + sqlCondition
+    
+    myCursor.execute(sqlCom)
+    myRec       = myCursor.fetchone()
+    lastFiles     = int(myRec[0] or 0)
+
     while thisDay <= myToday:
         thisDay += oneDay
+        # sqlCondition limits the querie to data for thisDay
         sqlCondition = "where run_date < '%s' " %(thisDay+oneDay).strftime('%Y-%m-%d')
         sqlCondition += "and run_date > '%s';" %thisDay.strftime('%Y-%m-%d')
         sqlCom      = "select sum(space)/%f from %s " %(TERABYTE, RDS_TABLE)  + sqlCondition
-        
+               
         myCursor.execute(sqlCom)
         myRec       = myCursor.fetchone()
         totStorageToday = float(myRec[0] or 0)
         
         sqlCom      = "select count(distinct(plan)) from %s " %RDS_TABLE + sqlCondition
-                
+        
         myCursor.execute(sqlCom)
         myRec       = myCursor.fetchone()
         noPlans     = int(myRec[0] or 0)
         
+        # get the total number of files for this day (sqlCondition)
         sqlCom      = "select sum(number_of_files) from %s " %RDS_TABLE + sqlCondition
-    
+        
         myCursor.execute(sqlCom)
         myRec       = myCursor.fetchone()
         noFiles     = int(myRec[0] or 0)
