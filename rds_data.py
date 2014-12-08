@@ -120,7 +120,8 @@ def recordStats(myCursor):
             print "Nothing is in %s, so no stats to record" %RDS_TABLE
             return
         else:
-            # we only want the date here
+            # we only want the date here, not the time
+            lastDate = lastDate[:10]
             lastDate = dateFromString(lastDate, "%Y-%m-%d", False) - oneDay
         # end if
     else:
