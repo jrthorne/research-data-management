@@ -132,9 +132,6 @@ def recordStats(myCursor):
     sqlFields   = "run_date, total_space, number_of_files, number_of_plans, "
     sqlFields   += "space_lag, files_lag, plans_lag"
     thisDay     = lastDate
-    lastStorage = 0
-    lastPlans = 0
-    lastFiles = 0
     
     # sqlCondition limits the querie to data for thisDay
     sqlCondition = "where run_date < '%s' " %(thisDay+oneDay).strftime('%Y-%m-%d')

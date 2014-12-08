@@ -242,13 +242,14 @@ if __name__ == "__main__":
         
         print "*3 Previous 30 days storage (rdslogs space) "
         print sqlCom
-        sqlCom      = "select total_space from %s " %RDS_STATS_TABLE
-        sqlCom      += "where run_date <= '%s' order by run_date desc  limit 1" %monthAgo.strftime('%Y-%m-%d')
+        sqlCom      = "select sum(space_lag) from %s " %RDS_STATS_TABLE
+        sqlCom      += "where run_date >= '%s' and run_date <= '%s'" %(monthAgo.strftime('%Y-%m-%d'), \
+                            myToday.strftime('%Y-%m-%d'))
         #print sqlCom
         
         myCursor.execute(sqlCom)
         myRec       = myCursor.fetchone()
-        myStats[SK[Storage30Days]] = float(myRec[0] or 0)
+        myStats[SK[Storage30Days]] = float(myRec[0] or 0) / TERABYTE
         
         
         ####################
@@ -257,13 +258,14 @@ if __name__ == "__main__":
         
         print "*4 Previous from 60 to 30 days"
         print sqlCom
-        sqlCom      = "select total_space from %s " %RDS_STATS_TABLE
-        sqlCom      += "where run_date <= '%s' order by run_date desc  limit 1;" %twoMonthsAgo.strftime('%Y-%m-%d')
+        sqlCom      = "select sum(space_lag) from %s " %RDS_STATS_TABLE
+        sqlCom      += "where run_date >= '%s' and run_date <= '%s' order by run_date desc  limit 1;" \
+                        %(twoMonthsAgo.strftime('%Y-%m-%d'), myToday.strftime('%Y-%m-%d'))
         #print sqlCom
         
         myCursor.execute(sqlCom)
         myRec       = myCursor.fetchone()
-        myStats[SK[Storage60Days]] = float(myRec[0] or 0)
+        myStats[SK[Storage60Days]] = float(myRec[0] or 0) / TERABYTE
         
         ####################
         # *5 The number of plans with allocated storage.  anything that exists in RDSLogs
