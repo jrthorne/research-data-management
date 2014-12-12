@@ -78,6 +78,10 @@ def runReport(file, myCursor):
                 spaceNumber = 0
             
             run_date         = dateFromString(theDate,"%a %b %d %H:%M:%S %Y", True)
+            # The Long file seems to record stuff from the previous day
+            if "LONG" in file.upper():
+                run_date    = run_date - datetime.timedelta(hours=12)
+            # end if
             sqlValues = (run_date, RDMP, cache, float(spaceNumber), int(files), file)
             
             sqlCom = 'insert into %s (%s) values (?,?,?,?,?,?)' % (RDS_TABLE, sqlFields)
